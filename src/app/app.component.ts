@@ -4,8 +4,7 @@ import { Loader } from '@googlemaps/js-api-loader';
 
 import dinos from 'dinos.json';
 import secrets from 'secrets.json';
-import { GoogleMap, MapInfoWindow } from '@angular/google-maps';
-import { MarkerManager } from '@googlemaps/markermanager';
+import { GoogleMap, MapInfoWindow, MapMarker } from '@angular/google-maps';
 
 @Component({
   selector: 'app-root',
@@ -17,16 +16,15 @@ export class AppComponent implements OnInit {
   loadedScript = false;
   lat = 0;
   long = 0;
+  options: google.maps.MapOptions = {
+    mapId: secrets.MAP_ID,
+    backgroundColor: '#30303030',
+  };
 
   shownLocations: any[] = [];
 
   @ViewChild(GoogleMap, { static: false }) map!: GoogleMap;
 
-  @ViewChild(MapInfoWindow, { static: false })
-  info!: MapInfoWindow;
-
-  private ALL_RECORDS_URL =
-    'https://paleobiodb.org/data1.2/occs/list.json?all_records';
   // https://paleobiodb.org/data1.2/occs/list.json?datainfo&rowcount&base_name=Dinosauria&show=coords
 
   private db = dinos.records;
@@ -47,42 +45,14 @@ export class AppComponent implements OnInit {
     loader.load().then(() => {
       this.loadedScript = true;
       this.cd.detectChanges();
-
-      const markerManager = new MarkerManager(this.map.googleMap!, {
-        borderPadding: 0,
-        maxZoom: 10,
-        shown: true,
-        trackMarkers: true,
-      });
-
-      //markerManager.addMarker(new google.maps.Marker())
-
-      markerManager.addMarkers(
-        this.db.map(
-          (dino) =>
-            new google.maps.Marker({
-              position: new google.maps.LatLng(dino.lat, dino.lng),
-            })
-        ),
-        1,
-        25
-      );
+      this.shownLocations = this.db.map((dino: any) => ({
+        position: new google.maps.LatLng(dino.lat, dino.lng),
+        content: dino.tna,
+      }));
     });
-
-    // run node backend once a day to receive new data and distribute it to clients
-    // this.http
-    //   .get('https://paleobiodb.org/data1.2/occs/list.json?all_records')
-    //   .subscribe((rec) => console.log(rec));
   }
 
-  public infoContent = '';
-
-  public openInfo(element: any, content: string): void {
-    this.infoContent = content;
-    this.info.open(element);
-  }
-
-  consolo() {
-    console.log(this.map.googleMap!.get('zoom'));
+  public openInfo(marker: MapMarker, mapInfoWindow: MapInfoWindow): void {
+    mapInfoWindow.open(marker);
   }
 }

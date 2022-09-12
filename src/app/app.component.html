@@ -4,17 +4,17 @@
   *ngIf="loadedScript"
   [zoom]="8"
   [center]="{ lat: lat, lng: long }"
-  (zoomChanged)="consolo()"
+  [options]="options"
 >
   <map-marker
-    #somemarker="mapMarker"
-    *ngFor="let marker of shownLocations"
+    #someMarker="mapMarker"
+    id="marker{{ index }}"
+    *ngFor="let marker of shownLocations; let index"
     [position]="marker.position"
-    (mapClick)="openInfo(somemarker, marker.content)"
+    (mapClick)="openInfo(someMarker, mapInfoWindow)"
   >
+    <map-info-window #mapInfoWindow="mapInfoWindow">
+      <p>{{ marker.content }}</p>
+    </map-info-window>
   </map-marker>
-
-  <map-info-window>
-    <p>{{ infoContent }}</p>
-  </map-info-window>
 </google-map>

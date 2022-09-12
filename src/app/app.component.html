@@ -1,14 +1,20 @@
-<title>{{ title }}}</title>
-<map-view
-  *ngIf="initilized"
-  [latitude]="lat"
-  [longitude]="long"
+<title>{{ title }}</title>
+<google-map
+  id="map"
+  *ngIf="loadedScript"
   [zoom]="8"
-  (boundsChange)="showMarkers($event)"
+  [center]="{ lat: lat, lng: long }"
+  (zoomChanged)="consolo()"
 >
   <map-marker
-    *ngFor="let location of shownLocations"
-    [latitude]="location.lat"
-    [longitude]="location.lng"
-  ></map-marker>
-</map-view>
+    #somemarker="mapMarker"
+    *ngFor="let marker of shownLocations"
+    [position]="marker.position"
+    (mapClick)="openInfo(somemarker, marker.content)"
+  >
+  </map-marker>
+
+  <map-info-window>
+    <p>{{ infoContent }}</p>
+  </map-info-window>
+</google-map>

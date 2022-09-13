@@ -1,4 +1,7 @@
 <title>{{ title }}</title>
+<div *ngIf="!loadedScript" class="loading-container">
+  <span>Excavating fossils...</span>
+</div>
 <google-map
   id="map"
   *ngIf="loadedScript"

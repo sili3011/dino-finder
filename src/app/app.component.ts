@@ -2,7 +2,6 @@ import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Loader } from '@googlemaps/js-api-loader';
 
-import dinos from 'dinos.json';
 import secrets from 'secrets.json';
 import { GoogleMap, MapInfoWindow, MapMarker } from '@angular/google-maps';
 
@@ -25,18 +24,30 @@ export class AppComponent implements OnInit {
 
   @ViewChild(GoogleMap, { static: false }) map!: GoogleMap;
 
-  // https://paleobiodb.org/data1.2/occs/list.json?datainfo&rowcount&base_name=Dinosauria&show=coords
+  DINOS_URL =
+    'https://us-central1-dino-finder-362009.cloudfunctions.net/api/dinos';
 
-  private db = dinos.records;
+  private db!: any[];
 
-  constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
+  constructor(private http: HttpClient, private cd: ChangeDetectorRef) {
+    if (this.db) {
+      this._loadMap();
+    } else {
+      this.http.get(this.DINOS_URL).subscribe((resp: any) => {
+        this.db = resp;
+        this._loadMap();
+      });
+    }
+  }
 
   public ngOnInit(): void {
     navigator.geolocation.getCurrentPosition((position) => {
       this.lat = position.coords.latitude;
       this.long = position.coords.longitude;
     });
+  }
 
+  private _loadMap(): void {
     const loader = new Loader({
       apiKey: secrets.GMAP_API_KEY,
       version: 'weekly',

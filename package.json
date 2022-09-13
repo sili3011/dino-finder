@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --configuration production --aot",
+    "deploy": "firebase use default && ng build --configuration production --aot && firebase deploy",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -22,6 +23,7 @@
     "@googlemaps/js-api-loader": "^1.14.3",
     "@googlemaps/markermanager": "^1.0.29",
     "@types/google-maps": "^3.2.3",
+    "firebase": "^9.9.4",
     "install": "^0.13.0",
     "npm": "^8.19.1",
     "rxjs": "~7.5.0",

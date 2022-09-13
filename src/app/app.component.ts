@@ -1,10 +1,22 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Loader } from '@googlemaps/js-api-loader';
-
-import secrets from 'secrets.json';
 import { GoogleMap } from '@angular/google-maps';
 import { MarkerManager } from '@googlemaps/markermanager';
+import secrets from 'secrets.json';
+
+interface DinoInfo {
+  cid: string;
+  eag: number;
+  idn: string;
+  lag: number;
+  oei: string;
+  oid: string;
+  rid: string;
+  rnk: number;
+  tid: string;
+  tna: string;
+}
 
 @Component({
   selector: 'app-root',
@@ -23,13 +35,15 @@ export class AppComponent implements OnInit {
 
   @ViewChild(GoogleMap, { static: false }) map!: GoogleMap;
 
-  private dinoInfos: Map<string, JSON> = new Map();
+  private dinoInfos: Map<string, DinoInfo> = new Map();
   private infoWindows: Map<string, google.maps.InfoWindow> = new Map();
   private manager!: MarkerManager;
 
   private DINOS_URL =
     'https://us-central1-dino-finder-362009.cloudfunctions.net/api/dinos';
   private DINO_INFO_URL = 'https://paleobiodb.org/data1.2/occs/single.json?id=';
+  private WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/';
+  private WIKIPEDIA_API_URL = 'https://en.wikipedia.org/api/rest_v1/page/html/';
   private digs!: any[];
 
   constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
@@ -98,15 +112,33 @@ export class AppComponent implements OnInit {
     this.manager.refresh();
   }
 
-  private _openInfoWindow(marker: google.maps.Marker, content: JSON): void {
+  private _openInfoWindow(marker: google.maps.Marker, content: DinoInfo): void {
     const id = marker.getTitle()!;
-    const infoWinodw = new google.maps.InfoWindow({
-      position: marker.getPosition(),
-      content: JSON.stringify(content),
-      pixelOffset: new google.maps.Size(0, -32),
-    });
-    infoWinodw.open(this.map.googleMap);
-    this.infoWindows.set(id, infoWinodw);
+    this.http
+      .get(this.WIKIPEDIA_API_URL + content.tna.replace(' ', '_'), {
+        responseType: 'text',
+      })
+      .subscribe((resp: string) => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(resp, 'text/html');
+        doc.body.querySelectorAll('a[href^="./"]').forEach((href) => {
+          href.addEventListener('click', (event) => {
+            event.preventDefault();
+            window.open(
+              this.WIKIPEDIA_URL + href.getAttribute('href')?.replace('./', ''),
+              '_blank'
+            );
+          });
+        });
+        doc.body.classList.add('body-window');
+        const infoWinodw = new google.maps.InfoWindow({
+          position: marker.getPosition(),
+          content: doc.body,
+          pixelOffset: new google.maps.Size(0, -32),
+        });
+        infoWinodw.open(this.map.googleMap);
+        this.infoWindows.set(id, infoWinodw);
+      });
   }
 
   private _loadMap(): void {

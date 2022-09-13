@@ -1,7 +1,12 @@
-body {
+.body-container {
     height: 100vh;
     margin: 0;
     background-color: #30303030;
+}
+
+.body-window {
+    height: 35rem;
+    margin: 0;
 }
 
 .loading-container {
@@ -15,4 +20,12 @@ body {
 .map-container {
     height: 100vh !important;
     width: 100vw !important;
+}
+
+.container {
+    max-height: 35rem;
+}
+
+.infobox {
+    width: -webkit-fill-available !important;
 }

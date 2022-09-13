@@ -1,23 +1,12 @@
 <title>{{ title }}</title>
-<div *ngIf="!loadedScript" class="loading-container">
+<div *ngIf="!loadedMap" class="loading-container">
   <span>Excavating fossils...</span>
 </div>
 <google-map
   id="map"
-  *ngIf="loadedScript"
+  *ngIf="loadedMap"
   [zoom]="8"
   [center]="{ lat: lat, lng: long }"
   [options]="options"
 >
-  <map-marker
-    #someMarker="mapMarker"
-    id="marker{{ index }}"
-    *ngFor="let marker of shownLocations; let index"
-    [position]="marker.position"
-    (mapClick)="openInfo(someMarker, mapInfoWindow)"
-  >
-    <map-info-window #mapInfoWindow="mapInfoWindow">
-      <p>{{ marker.content }}</p>
-    </map-info-window>
-  </map-marker>
 </google-map>

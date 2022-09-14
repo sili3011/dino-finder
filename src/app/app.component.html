@@ -3,8 +3,24 @@
   <span>Excavating fossils...</span>
 </div>
 <div *ngIf="loadedMap" class="height-100" style="display: flex">
-  <div #searchControl class="search-control">
-    <input #mapSearchField class="search-box" type="text" />
+  <div
+    #searchControl
+    class="search-control"
+    (click)="toggleFilterPanel()"
+    [ngStyle]="{
+      height: showFilterPanel ? '50%' : '',
+      width: isMobile ? '75%' : '33%'
+    }"
+  >
+    <div style="display: flex">
+      <input
+        #mapSearchField
+        class="search-box"
+        type="text"
+        (click)="$event.stopPropagation()"
+      />
+      <div class="fake-button"></div>
+    </div>
   </div>
   <google-map
     id="map"

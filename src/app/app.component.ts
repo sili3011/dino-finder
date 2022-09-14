@@ -37,7 +37,21 @@ export class AppComponent implements OnInit {
   options: google.maps.MapOptions = {
     mapId: secrets.MAP_ID,
     backgroundColor: '#30303030',
+    mapTypeControl: true,
+    mapTypeControlOptions: {
+      style: 1,
+      position: 9,
+    },
+    streetViewControl: false,
+    zoomControlOptions: {
+      position: 6,
+    },
   };
+
+  isMobile = false;
+  showFilterPanel = true;
+
+  allDinoTypes: string[] = [];
 
   @ViewChild(GoogleMap) map!: GoogleMap;
   @ViewChild('mapSearchField') searchField!: ElementRef;
@@ -57,13 +71,12 @@ export class AppComponent implements OnInit {
   constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
 
   public ngOnInit(): void {
-    const ua = navigator.userAgent;
+    this.isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(
+        navigator.userAgent
+      );
 
-    if (
-      !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(
-        ua
-      )
-    ) {
+    if (!this.isMobile) {
       navigator.geolocation.getCurrentPosition((position) => {
         this.lat = position.coords.latitude;
         this.long = position.coords.longitude;
@@ -214,5 +227,9 @@ export class AppComponent implements OnInit {
       this.cd.detectChanges();
       this.manager = new MarkerManager(this.map.googleMap!, {});
     });
+  }
+
+  public toggleFilterPanel(): void {
+    this.showFilterPanel = !this.showFilterPanel;
   }
 }

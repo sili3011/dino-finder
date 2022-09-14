@@ -157,27 +157,48 @@ export class AppComponent implements OnInit {
       .get(this.WIKIPEDIA_API_URL + content.tna.replace(' ', '_'), {
         responseType: 'text',
       })
-      .subscribe((resp: string) => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(resp, 'text/html');
-        doc.body.querySelectorAll('a[href^="./"]').forEach((href) => {
-          href.addEventListener('click', (event) => {
-            event.preventDefault();
-            window.open(
-              this.WIKIPEDIA_URL + href.getAttribute('href')?.replace('./', ''),
-              '_blank'
-            );
-          });
-        });
-        doc.body.classList.add('body-window');
-        const infoWinodw = new google.maps.InfoWindow({
-          position: marker.getPosition(),
-          content: doc.body,
-          pixelOffset: new google.maps.Size(0, -32),
-        });
-        infoWinodw.open(this.map.googleMap);
-        this.infoWindows.set(id, infoWinodw);
+      .subscribe({
+        next: (resp: string) => {
+          this.fillInfoWindow(resp, marker, id);
+        },
+        error: (error) => {
+          this.http
+            .get(this.WIKIPEDIA_API_URL + content.tna.split(' ')[0], {
+              responseType: 'text',
+            })
+            .subscribe({
+              next: (resp: string) => {
+                this.fillInfoWindow(resp, marker, id);
+              },
+            });
+        },
       });
+  }
+
+  private fillInfoWindow(
+    content: string,
+    marker: google.maps.Marker,
+    id: string
+  ): void {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    doc.body.querySelectorAll('a[href^="./"]').forEach((href) => {
+      href.addEventListener('click', (event) => {
+        event.preventDefault();
+        window.open(
+          this.WIKIPEDIA_URL + href.getAttribute('href')?.replace('./', ''),
+          '_blank'
+        );
+      });
+    });
+    doc.body.classList.add('body-window');
+    const infoWinodw = new google.maps.InfoWindow({
+      position: marker.getPosition(),
+      content: doc.body,
+      pixelOffset: new google.maps.Size(0, -32),
+    });
+    infoWinodw.open(this.map.googleMap);
+    this.infoWindows.set(id, infoWinodw);
   }
 
   private _loadMap(): void {

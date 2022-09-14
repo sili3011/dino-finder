@@ -1,4 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Loader } from '@googlemaps/js-api-loader';
 import { GoogleMap } from '@angular/google-maps';
@@ -33,7 +39,8 @@ export class AppComponent implements OnInit {
     backgroundColor: '#30303030',
   };
 
-  @ViewChild(GoogleMap, { static: false }) map!: GoogleMap;
+  @ViewChild(GoogleMap) map!: GoogleMap;
+  @ViewChild('mapSearchField') searchField!: ElementRef;
 
   private dinoInfos: Map<string, DinoInfo> = new Map();
   private infoWindows: Map<string, google.maps.InfoWindow> = new Map();
@@ -48,7 +55,7 @@ export class AppComponent implements OnInit {
 
   constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
 
-  public ngOnInit(): void {
+  public async ngOnInit(): Promise<void> {
     const ua = navigator.userAgent;
 
     if (
@@ -67,17 +74,39 @@ export class AppComponent implements OnInit {
     const cache = localStorage.getItem('digs');
     if (cache) {
       this.digs = JSON.parse(cache);
-      setTimeout(() => this.initMarkers(), 500);
+      setTimeout(() => this.initUI(), 500);
     } else {
       this.http.get(this.DINOS_URL).subscribe((resp: any) => {
         this.digs = resp;
         localStorage.setItem('digs', JSON.stringify(this.digs));
-        this.initMarkers();
+        this.initUI();
       });
     }
   }
 
-  private initMarkers(): void {
+  private initUI(): void {
+    const searchBox = new google.maps.places.SearchBox(
+      this.searchField.nativeElement
+    );
+    this.map.controls[google.maps.ControlPosition.TOP_CENTER].push(
+      this.searchField.nativeElement
+    );
+    searchBox.addListener('places_changed', () => {
+      const places = searchBox.getPlaces();
+      if (!places || places.length === 0) {
+        return;
+      }
+      const bounds = new google.maps.LatLngBounds();
+      places.forEach((place) => {
+        if (place.geometry!.viewport) {
+          bounds.union(place.geometry!.viewport);
+        } else {
+          bounds.extend(place.geometry!.location!);
+        }
+      });
+      this.map.fitBounds(bounds);
+    });
+
     const markers = this.digs.map(
       (dino: any) =>
         new google.maps.Marker({
@@ -145,6 +174,7 @@ export class AppComponent implements OnInit {
     const loader = new Loader({
       apiKey: secrets.GMAP_API_KEY,
       version: 'weekly',
+      libraries: ['places'],
     });
 
     loader.load().then(() => {

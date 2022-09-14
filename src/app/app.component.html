@@ -2,12 +2,14 @@
 <div *ngIf="!loadedMap" class="loading-container">
   <span>Excavating fossils...</span>
 </div>
-<google-map
-  id="map"
-  class="gmap"
-  *ngIf="loadedMap"
-  [zoom]="8"
-  [center]="{ lat: lat, lng: long }"
-  [options]="options"
->
-</google-map>
+<div *ngIf="loadedMap" class="height-100" style="display: flex">
+  <input #mapSearchField class="search-box" type="text" />
+  <google-map
+    id="map"
+    class="gmap"
+    [zoom]="8"
+    [center]="{ lat: lat, lng: long }"
+    [options]="options"
+  >
+  </google-map>
+</div>

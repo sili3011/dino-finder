@@ -72,13 +72,23 @@ export class AppComponent implements OnInit {
     this._loadMap();
 
     const cache = localStorage.getItem('digs');
+    let getData = true;
     if (cache) {
-      this.digs = JSON.parse(cache);
-      setTimeout(() => this.initUI(), 500);
-    } else {
+      const cachedData = JSON.parse(cache);
+      const now = new Date().getTime();
+      if (now - cachedData.birth < 1000 * 60 * 60 * 24) {
+        getData = false;
+        this.digs = cachedData.digs;
+        setTimeout(() => this.initUI(), 500);
+      }
+    }
+    if (getData) {
       this.http.get(this.DINOS_URL).subscribe((resp: any) => {
         this.digs = resp;
-        localStorage.setItem('digs', JSON.stringify(this.digs));
+        localStorage.setItem(
+          'digs',
+          JSON.stringify({ birth: new Date().getTime(), digs: this.digs })
+        );
         this.initUI();
       });
     }

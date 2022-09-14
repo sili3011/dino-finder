@@ -3,7 +3,9 @@
   <span>Excavating fossils...</span>
 </div>
 <div *ngIf="loadedMap" class="height-100" style="display: flex">
-  <input #mapSearchField class="search-box" type="text" />
+  <div #searchControl class="search-control">
+    <input #mapSearchField class="search-box" type="text" />
+  </div>
   <google-map
     id="map"
     class="gmap"

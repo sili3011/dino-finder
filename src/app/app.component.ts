@@ -41,6 +41,7 @@ export class AppComponent implements OnInit {
 
   @ViewChild(GoogleMap) map!: GoogleMap;
   @ViewChild('mapSearchField') searchField!: ElementRef;
+  @ViewChild('searchControl') searchControl!: ElementRef;
 
   private dinoInfos: Map<string, DinoInfo> = new Map();
   private infoWindows: Map<string, google.maps.InfoWindow> = new Map();
@@ -55,7 +56,7 @@ export class AppComponent implements OnInit {
 
   constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
 
-  public async ngOnInit(): Promise<void> {
+  public ngOnInit(): void {
     const ua = navigator.userAgent;
 
     if (
@@ -99,7 +100,7 @@ export class AppComponent implements OnInit {
       this.searchField.nativeElement
     );
     this.map.controls[google.maps.ControlPosition.TOP_CENTER].push(
-      this.searchField.nativeElement
+      this.searchControl.nativeElement
     );
     searchBox.addListener('places_changed', () => {
       const places = searchBox.getPlaces();

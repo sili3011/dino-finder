@@ -51,7 +51,8 @@ export class AppComponent implements OnInit {
   isMobile = false;
   showFilterPanel = true;
 
-  allDinoTypes: string[] = [];
+  private digs!: DinoInfo[];
+  public dinoTypes!: string[];
 
   @ViewChild(GoogleMap) map!: GoogleMap;
   @ViewChild('mapSearchField') searchField!: ElementRef;
@@ -61,12 +62,13 @@ export class AppComponent implements OnInit {
   private infoWindows: Map<string, google.maps.InfoWindow> = new Map();
   private manager!: MarkerManager;
 
-  private DINOS_URL =
-    'https://us-central1-dino-finder-362009.cloudfunctions.net/api/dinos';
+  private DIGS_URL =
+    'https://us-central1-dino-finder-362009.cloudfunctions.net/api/digs';
+  private DINO_TYPES_URL =
+    'https://us-central1-dino-finder-362009.cloudfunctions.net/api/dino-types';
   private DINO_INFO_URL = 'https://paleobiodb.org/data1.2/occs/single.json?id=';
   private WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/';
   private WIKIPEDIA_API_URL = 'https://en.wikipedia.org/api/rest_v1/page/html/';
-  private digs!: any[];
 
   constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
 
@@ -97,7 +99,7 @@ export class AppComponent implements OnInit {
       }
     }
     if (getData) {
-      this.http.get(this.DINOS_URL).subscribe((resp: any) => {
+      this.http.get(this.DIGS_URL).subscribe((resp: any) => {
         this.digs = resp;
         localStorage.setItem(
           'digs',
@@ -106,6 +108,13 @@ export class AppComponent implements OnInit {
         this.initUI();
       });
     }
+
+    console.log('before');
+
+    this.http.get(this.DINO_TYPES_URL).subscribe((resp: any) => {
+      this.dinoTypes = resp;
+      console.log(resp);
+    });
   }
 
   private initUI(): void {

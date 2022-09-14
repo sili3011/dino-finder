@@ -21,6 +21,9 @@
       />
       <div class="fake-button"></div>
     </div>
+    <div *ngIf="showFilterPanel" style="overflow: hidden">
+      <span *ngFor="let dinoType of dinoTypes">{{ dinoType }}</span>
+    </div>
   </div>
   <google-map
     id="map"

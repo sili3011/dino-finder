@@ -24,6 +24,11 @@ interface DinoInfo {
   tna: string;
 }
 
+interface DinoType {
+  tna: string;
+  count: number;
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -52,7 +57,7 @@ export class AppComponent implements OnInit {
   showFilterPanel = true;
 
   private digs!: DinoInfo[];
-  public dinoTypes!: string[];
+  public dinoTypes!: DinoType[];
 
   @ViewChild(GoogleMap) map!: GoogleMap;
   @ViewChild('mapSearchField') searchField!: ElementRef;
@@ -95,26 +100,30 @@ export class AppComponent implements OnInit {
       if (now - cachedData.birth < 1000 * 60 * 60 * 24) {
         getData = false;
         this.digs = cachedData.digs;
+        this.dinoTypes = cachedData.dinoTypes;
         setTimeout(() => this.initUI(), 500);
       }
     }
     if (getData) {
       this.http.get(this.DIGS_URL).subscribe((resp: any) => {
         this.digs = resp;
+        this.dinoTypes = [...new Set(this.digs.map((dig) => dig.tna))]
+          .sort()
+          .map((tax) => ({
+            tna: tax,
+            count: this.digs.filter((dig) => dig.tna === tax).length,
+          }));
         localStorage.setItem(
           'digs',
-          JSON.stringify({ birth: new Date().getTime(), digs: this.digs })
+          JSON.stringify({
+            birth: new Date().getTime(),
+            digs: this.digs,
+            dinoTypes: this.dinoTypes,
+          })
         );
         this.initUI();
       });
     }
-
-    console.log('before');
-
-    this.http.get(this.DINO_TYPES_URL).subscribe((resp: any) => {
-      this.dinoTypes = resp;
-      console.log(resp);
-    });
   }
 
   private initUI(): void {

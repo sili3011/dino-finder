@@ -15,14 +15,26 @@
     <div style="display: flex">
       <input
         #mapSearchField
-        class="search-box"
+        class="search-box material-like"
         type="text"
         (click)="$event.stopPropagation()"
       />
-      <div class="fake-button"></div>
+      <div class="fake-button material-like"></div>
     </div>
-    <div *ngIf="showFilterPanel" style="overflow: hidden">
-      <span *ngFor="let dinoType of dinoTypes">{{ dinoType }}</span>
+    <div
+      *ngIf="showFilterPanel"
+      class="filter-panel"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        *ngFor="let dinoType of dinoTypes; let i = index"
+        class="checkbox-rect"
+      >
+        <input type="checkbox" id="checkbox-rect{{ i }}" name="check" />
+        <label for="checkbox-rect{{ i }}"
+          >{{ dinoType.tna }} ({{ dinoType.count }})</label
+        >
+      </div>
     </div>
   </div>
   <google-map

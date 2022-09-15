@@ -6,5 +6,8 @@ An Angular app that uses [Google Maps](https://github.com/angular/components/blo
 - Google Places for finding addresses
 - Click on markers shows a corresponding Wikipedia article
 ## Planned features
-- Filtering markers
+- Filtering markers by taxonomy
+- Filtering markers by period they lived in
+- Filtering markers by dino feature (herbivore, bipedal, ...)
+- Coloring markers
 - Click on markers shows Google Images

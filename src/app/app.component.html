@@ -1,8 +1,13 @@
 <title>{{ title }}</title>
-<div *ngIf="!loadedMap" class="loading-container">
+<div *ngIf="!loadedMap || !loadedUI" class="loading-container">
   <span>Excavating fossils...</span>
 </div>
-<div *ngIf="loadedMap" class="height-100" style="display: flex">
+<div
+  *ngIf="loadedMap"
+  [ngStyle]="{ filter: loadedUI ? '' : 'opacity(0)' }"
+  class="height-100"
+  style="display: flex"
+>
   <div
     #searchControl
     class="search-control"
@@ -15,26 +20,71 @@
     <div style="display: flex">
       <input
         #mapSearchField
+        [ngStyle]="{
+          'z-index': showFilterPanel ? '10' : '100',
+          width:
+            'calc(' +
+            (isMobile ? '75%' : '33%') +
+            ' - ' +
+            fakeButton.offsetWidth +
+            'px)'
+        }"
         class="search-box material-like"
         type="text"
         (click)="$event.stopPropagation()"
       />
-      <div class="fake-button material-like"></div>
+      <input
+        placeholder="Enter a dinosaur"
+        [ngStyle]="{
+          'z-index': !showFilterPanel ? '10' : '100',
+          width:
+            'calc(' +
+            (isMobile ? '75%' : '33%') +
+            ' - ' +
+            fakeButton.offsetWidth +
+            'px)'
+        }"
+        class="search-box material-like"
+        type="text"
+        (click)="$event.stopPropagation()"
+      />
+      <div #fakeButton class="fake-button material-like">
+        <svg class="icon">
+          <path
+            *ngIf="showFilterPanel"
+            fill="darkgrey"
+            d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"
+          />
+          <path
+            *ngIf="!showFilterPanel"
+            fill="darkgrey"
+            d="M13 2V3H12V9H11V10H9V11H8V12H7V13H5V12H4V11H3V9H2V15H3V16H4V17H5V18H6V22H8V21H7V20H8V19H9V18H10V19H11V22H13V21H12V17H13V16H14V15H15V12H16V13H17V11H15V9H20V8H17V7H22V3H21V2M14 3H15V4H14Z"
+          />
+        </svg>
+      </div>
     </div>
     <div
-      *ngIf="showFilterPanel"
+      *ngIf="loadedFilter"
       class="filter-panel"
       (click)="$event.stopPropagation()"
+      [ngStyle]="{ height: !showFilterPanel ? '0px' : '' }"
     >
-      <div
-        *ngFor="let dinoType of dinoTypes; let i = index"
-        class="checkbox-rect"
-      >
-        <input type="checkbox" id="checkbox-rect{{ i }}" name="check" />
-        <label for="checkbox-rect{{ i }}"
-          >{{ dinoType.tna }} ({{ dinoType.count }})</label
+      <form [formGroup]="checkboxControls">
+        <div
+          *ngFor="let dinoType of dinoTypes; let i = index"
+          class="checkbox-rect"
         >
-      </div>
+          <input
+            formControlName="{{ dinoType.tna.replace(' ', '_') }}"
+            type="checkbox"
+            id="checkbox-rect{{ i }}"
+            name="check"
+          />
+          <label for="checkbox-rect{{ i }}"
+            >{{ dinoType.tna }} ({{ dinoType.count }})</label
+          >
+        </div>
+      </form>
     </div>
   </div>
   <google-map
@@ -45,4 +95,17 @@
     [options]="options"
   >
   </google-map>
+</div>
+<div
+  class="logo-container"
+  [ngClass]="{
+    visible: !loadedMap || !loadedUI || !loadedFilter,
+    hidden: loadedMap && loadedUI && loadedFilter
+  }"
+>
+  <div
+    *ngIf="!loadedMap || !loadedUI || !loadedFilter"
+    class="lds-dual-ring"
+  ></div>
+  <img class="logo" src="assets/favicon.png" />
 </div>

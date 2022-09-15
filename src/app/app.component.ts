@@ -10,6 +10,7 @@ import { Loader } from '@googlemaps/js-api-loader';
 import { GoogleMap } from '@angular/google-maps';
 import { MarkerManager } from '@googlemaps/markermanager';
 import secrets from 'secrets.json';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 
 interface DinoInfo {
   cid: string;
@@ -35,8 +36,10 @@ interface DinoType {
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  title = 'dino-finder';
+  title = 'DinoDigs';
   loadedMap = false;
+  loadedUI = false;
+  loadedFilter = false;
   lat = 48;
   long = 16;
   options: google.maps.MapOptions = {
@@ -53,8 +56,10 @@ export class AppComponent implements OnInit {
     },
   };
 
+  checkboxControls: FormGroup;
+
   isMobile = false;
-  showFilterPanel = true;
+  showFilterPanel = false;
 
   private digs!: DinoInfo[];
   public dinoTypes!: DinoType[];
@@ -69,13 +74,17 @@ export class AppComponent implements OnInit {
 
   private DIGS_URL =
     'https://us-central1-dino-finder-362009.cloudfunctions.net/api/digs';
-  private DINO_TYPES_URL =
-    'https://us-central1-dino-finder-362009.cloudfunctions.net/api/dino-types';
   private DINO_INFO_URL = 'https://paleobiodb.org/data1.2/occs/single.json?id=';
   private WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/';
   private WIKIPEDIA_API_URL = 'https://en.wikipedia.org/api/rest_v1/page/html/';
 
-  constructor(private http: HttpClient, private cd: ChangeDetectorRef) {}
+  constructor(
+    private http: HttpClient,
+    private cd: ChangeDetectorRef,
+    private fb: FormBuilder
+  ) {
+    this.checkboxControls = this.fb.group({});
+  }
 
   public ngOnInit(): void {
     this.isMobile =
@@ -149,14 +158,46 @@ export class AppComponent implements OnInit {
       this.map.fitBounds(bounds);
     });
 
-    const markers = this.digs.map(
-      (dino: any) =>
-        new google.maps.Marker({
-          position: new google.maps.LatLng(dino.lat, dino.lng),
-          title: dino.oid.split(':')[1],
-          clickable: true,
-        })
-    );
+    this.setMarkers();
+    this.loadedUI = true;
+
+    setTimeout(() => {
+      for (const type of this.dinoTypes) {
+        this.checkboxControls.addControl(
+          type.tna.replace(' ', '_'),
+          new FormControl(false)
+        );
+      }
+
+      this.checkboxControls.valueChanges.subscribe((changes) => {
+        this.setMarkers();
+      });
+
+      this.loadedFilter = true;
+    }, 500);
+  }
+
+  private setMarkers(): void {
+    this.manager.clearMarkers();
+
+    const typeFilter = Object.entries(this.checkboxControls.controls)
+      .filter((check) => check[1].value)
+      .map((check) => check[0]);
+
+    const markers = this.digs
+      .filter(
+        (dig) =>
+          typeFilter.length === 0 ||
+          typeFilter.includes(dig.tna.replace(' ', '_'))
+      )
+      .map(
+        (dino: any) =>
+          new google.maps.Marker({
+            position: new google.maps.LatLng(dino.lat, dino.lng),
+            title: dino.oid.split(':')[1],
+            clickable: true,
+          })
+      );
 
     markers.forEach((marker) => {
       window.google.maps.event.addListener(marker, 'click', () => {
@@ -179,7 +220,7 @@ export class AppComponent implements OnInit {
       });
     });
 
-    this.manager.addMarkers(markers, 5, 15);
+    this.manager.addMarkers(markers, 1, 19);
     this.manager.refresh();
   }
 

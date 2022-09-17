@@ -34,6 +34,7 @@
         (click)="$event.stopPropagation()"
       />
       <input
+        [formControl]="dinoSearchInputControl"
         placeholder="Enter a dinosaur"
         [ngStyle]="{
           'z-index': !showFilterPanel ? '10' : '100',
@@ -64,27 +65,24 @@
       </div>
     </div>
     <div
-      *ngIf="loadedFilter"
       class="filter-panel"
       (click)="$event.stopPropagation()"
       [ngStyle]="{ height: !showFilterPanel ? '0px' : '' }"
     >
-      <form [formGroup]="checkboxControls">
-        <div
-          *ngFor="let dinoType of dinoTypes; let i = index"
-          class="checkbox-rect"
+      <div
+        *ngFor="let dinoType of filteredDinoTypes; let i = index"
+        class="checkbox-rect"
+      >
+        <input
+          type="checkbox"
+          id="checkbox-rect{{ i }}"
+          name="check"
+          (click)="includeExcludeDino(dinoType.tna)"
+        />
+        <label for="checkbox-rect{{ i }}"
+          >{{ dinoType.tna }} ({{ dinoType.count }})</label
         >
-          <input
-            formControlName="{{ dinoType.tna.replace(' ', '_') }}"
-            type="checkbox"
-            id="checkbox-rect{{ i }}"
-            name="check"
-          />
-          <label for="checkbox-rect{{ i }}"
-            >{{ dinoType.tna }} ({{ dinoType.count }})</label
-          >
-        </div>
-      </form>
+      </div>
     </div>
   </div>
   <google-map
@@ -99,8 +97,8 @@
 <div
   class="logo-container"
   [ngClass]="{
-    visible: !loadedMap || !loadedUI || !loadedFilter,
-    hidden: loadedMap && loadedUI && loadedFilter
+    visible: !loadedMap || !loadedUI,
+    hidden: loadedMap && loadedUI
   }"
 >
   <div class="lds-dual-ring"></div>

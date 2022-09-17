@@ -10,7 +10,7 @@ import { Loader } from '@googlemaps/js-api-loader';
 import { GoogleMap } from '@angular/google-maps';
 import { MarkerManager } from '@googlemaps/markermanager';
 import secrets from 'secrets.json';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 
 interface DinoInfo {
   cid: string;
@@ -56,13 +56,15 @@ export class AppComponent implements OnInit {
     },
   };
 
-  checkboxControls: FormGroup;
+  public includedDinos: string[] = [];
+  public dinoSearchInputControl = new FormControl<string>('');
 
-  isMobile = false;
-  showFilterPanel = false;
+  public isMobile = false;
+  public showFilterPanel = false;
 
-  private digs!: DinoInfo[];
-  public dinoTypes!: DinoType[];
+  private digs: DinoInfo[] = [];
+  private dinoTypes: DinoType[] = [];
+  public filteredDinoTypes: DinoType[] = [];
 
   @ViewChild(GoogleMap) map!: GoogleMap;
   @ViewChild('mapSearchField') searchField!: ElementRef;
@@ -78,12 +80,14 @@ export class AppComponent implements OnInit {
   private WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/';
   private WIKIPEDIA_API_URL = 'https://en.wikipedia.org/api/rest_v1/page/html/';
 
-  constructor(
-    private http: HttpClient,
-    private cd: ChangeDetectorRef,
-    private fb: FormBuilder
-  ) {
-    this.checkboxControls = this.fb.group({});
+  constructor(private http: HttpClient, private cd: ChangeDetectorRef) {
+    this.dinoSearchInputControl.valueChanges.subscribe((valueChanges) => {
+      valueChanges
+        ? (this.filteredDinoTypes = this.dinoTypes.filter((dino) =>
+            dino.tna.toLowerCase().includes(valueChanges.toLowerCase())
+          ))
+        : this.dinoTypes;
+    });
   }
 
   public ngOnInit(): void {
@@ -109,14 +113,16 @@ export class AppComponent implements OnInit {
       if (now - cachedData.birth < 1000 * 60 * 60 * 24) {
         getData = false;
         this.digs = cachedData.digs;
-        this.dinoTypes = cachedData.dinoTypes;
+        this.filteredDinoTypes = this.dinoTypes = cachedData.dinoTypes;
         setTimeout(() => this.initUI(), 500);
       }
     }
     if (getData) {
       this.http.get(this.DIGS_URL).subscribe((resp: any) => {
         this.digs = resp;
-        this.dinoTypes = [...new Set(this.digs.map((dig) => dig.tna))]
+        this.filteredDinoTypes = this.dinoTypes = [
+          ...new Set(this.digs.map((dig) => dig.tna)),
+        ]
           .sort()
           .map((tax) => ({
             tna: tax,
@@ -160,35 +166,16 @@ export class AppComponent implements OnInit {
 
     this.setMarkers();
     this.loadedUI = true;
-
-    setTimeout(() => {
-      for (const type of this.dinoTypes) {
-        this.checkboxControls.addControl(
-          type.tna.replace(' ', '_'),
-          new FormControl(false)
-        );
-      }
-
-      this.checkboxControls.valueChanges.subscribe((changes) => {
-        this.setMarkers();
-      });
-
-      this.loadedFilter = true;
-    }, 500);
   }
 
   private setMarkers(): void {
     this.manager.clearMarkers();
 
-    const typeFilter = Object.entries(this.checkboxControls.controls)
-      .filter((check) => check[1].value)
-      .map((check) => check[0]);
-
     const markers = this.digs
       .filter(
         (dig) =>
-          typeFilter.length === 0 ||
-          typeFilter.includes(dig.tna.replace(' ', '_'))
+          this.includedDinos.length === 0 ||
+          this.includedDinos.includes(dig.tna.replace(' ', '_'))
       )
       .map(
         (dino: any) =>
@@ -290,5 +277,18 @@ export class AppComponent implements OnInit {
 
   public toggleFilterPanel(): void {
     this.showFilterPanel = !this.showFilterPanel;
+  }
+
+  public isDinoIncluded(dino: string): boolean {
+    return this.includedDinos.includes(dino.replace(' ', '_'));
+  }
+
+  public includeExcludeDino(dino: string): void {
+    if (this.isDinoIncluded(dino)) {
+      this.includedDinos.splice(this.includedDinos.indexOf(dino));
+    } else {
+      this.includedDinos.push(dino.replace(' ', '_'));
+    }
+    this.setMarkers();
   }
 }
